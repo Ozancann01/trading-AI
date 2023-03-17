@@ -42,7 +42,8 @@ class TradingEnvironment(gym.Env):
         return obs, reward, done, info
 
     def _get_observation(self):
-        return self.data.iloc[self.current_step - self.window_size:self.current_step].values
+        return self.data.iloc[self.current_step - self.window_size:self.current_step, 1:].values
+
 
     def render(self, mode='human'):
         pass  # Rendering is not implemented for this environment
