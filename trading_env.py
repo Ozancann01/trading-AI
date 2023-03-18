@@ -10,7 +10,8 @@ class TradingEnvironment(gym.Env):
         self.current_step = self.window_size
 
         self.action_space = spaces.Discrete(3)  # Buy, hold, sell
-        self.observation_space = spaces.Box(low=0, high=float('inf'), shape=(self.window_size, 5), dtype=np.float32)
+        self.observation_space = spaces.Box(low=0, high=float('inf'), shape=(self.window_size, 5 + 3), dtype=np.float32)
+
 
         self.reset()
 
@@ -42,7 +43,8 @@ class TradingEnvironment(gym.Env):
         return obs, reward, done, info
 
     def _get_observation(self):
-        return self.data.iloc[self.current_step - self.window_size:self.current_step, 1:].values
+        columns_to_select = ['open', 'high', 'low', 'close', 'volume', 'DoubleTop', 'DoubleBottom', 'HeadAndShoulders']
+        return self.data.iloc[self.current_step - self.window_size:self.current_step][columns_to_select].values
 
 
     def render(self, mode='human'):

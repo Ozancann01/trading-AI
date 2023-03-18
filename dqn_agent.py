@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 
+
 class QNetwork(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(QNetwork, self).__init__()
@@ -18,12 +19,13 @@ class QNetwork(nn.Module):
         return self.layers(x)
 
 class DQNAgent:
-    def __init__(self, env, learning_rate=0.001, gamma=0.99, epsilon=1.0, epsilon_min=0.01, epsilon_decay=0.995):
+    def __init__(self, env, input_dim, action_size, device, learning_rate=0.001, gamma=0.99, epsilon=1.0, epsilon_decay=0.995, epsilon_min=0.01):
         self.env = env
         self.learning_rate = learning_rate
         self.gamma = gamma
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
+        self.action_size = action_size
         self.epsilon_decay = epsilon_decay
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -51,7 +53,7 @@ class DQNAgent:
 
     def select_action(self, state):
         if np.random.rand() < self.epsilon:
-            return np.random.choice(self.action_size)
+           return np.random.choice(self.action_size) 
 
         state = state.flatten()  # Add this line
         state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
@@ -62,10 +64,10 @@ class DQNAgent:
     def train(self, minibatch):
         states, actions, rewards, next_states, dones = zip(*minibatch)
 
-        states = [s.flatten() for s in states]
-        next_states = [s.flatten() for s in next_states]
+        states = np.array([s.flatten() for s in states])
+        next_states = np.array([s.flatten() for s in next_states])
 
-        states_tensor = torch.FloatTensor(states).to(self.device)
+        states_tensor = torch.tensor(states, dtype=torch.float32).to(self.device)
         actions_tensor = torch.LongTensor(actions).unsqueeze(1).to(self.device)
         rewards_tensor = torch.FloatTensor(rewards).unsqueeze(1).to(self.device)
         next_states_tensor = torch.FloatTensor(next_states).to(self.device)
@@ -83,4 +85,3 @@ class DQNAgent:
         # Decay epsilon
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
-
