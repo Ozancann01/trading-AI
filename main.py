@@ -1,10 +1,7 @@
-#from threading import Thread
-from multiprocessing import Process, Manager
 import pickle
 from threading import Thread
 from dashboard import run_dashboard
-from trading import run_trading
-
+import json
 from fetch_data import initialize_exchange, fetch_historical_data
 from trading_env import TradingEnvironment
 from dqn_agent import DQNAgent
@@ -12,14 +9,32 @@ from collections import deque
 from random import sample
 import os
 import torch
-from dashboard import run_dashboard
 from queue import Queue
-trading_data = Manager().dict()
+
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # Use the first GPU (index 0)
 
 # Limit the number of CPU threads used by PyTorch
 torch.set_num_threads(4)  # Use 4 CPU threads
+trading_data=[]
+
+
+
+def evaluate_agent(agent, env, trading_data):
+    state = env.reset()
+    done = False
+    cumulative_profit = 0
+
+    while not done:
+        action = agent.select_action(state, eval_mode=True)
+        next_state, reward, done, _ = env.step(action)
+        cumulative_profit += reward
+        state = next_state
+    # Update the trading_data queue with new trade data
+    trading_data[env.current_step] = {"timestamp": env.current_step, "action": action, "balance": env.balance}
+
+
+    return cumulative_profit
 
 
 def train_agent(agent, env, episodes, buffer_size, batch_size, update_freq, trading_data):
@@ -62,25 +77,14 @@ def train_agent(agent, env, episodes, buffer_size, batch_size, update_freq, trad
             agent.save_model(f"models/model_checkpoint_{episode + 1}.pth")
             print(f"Model saved at episode {episode + 1}")
 
-def evaluate_agent(agent, env, trading_data):
-    state = env.reset()
-    done = False
-    cumulative_profit = 0
-
-    while not done:
-        action = agent.select_action(state, eval_mode=True)
-        next_state, reward, done, _ = env.step(action)
-        cumulative_profit += reward
-        state = next_state
-    # Update the trading_data queue with new trade data
-    trading_data[env.current_step] = {"timestamp": env.current_step, "action": action, "balance": env.balance}
 
 
-    return cumulative_profit
-
+def save_trade(trading_data):
+    with open('trading_data.json', 'w') as f:
+        json.dump(trading_data, f)
 
 if __name__ == "__main__":
-    trading_data = Manager().dict()
+  
     #api_key = 'YOUR_API_KEY'
     #secret_key = 'YOUR_SECRET_KEY'
     #exchange = initialize_exchange(api_key, secret_key)
@@ -123,24 +127,24 @@ if __name__ == "__main__":
 
 
     # Load evaluation data
-    eval_data = ...  # Fetch evaluation data similar to training data
+    #eval_data = ...  # Fetch evaluation data similar to training data
 
     # Create a new trading environment using the evaluation data
-    eval_env = TradingEnvironment(eval_data_with_chart_patterns)
-
+    #eval_env = TradingEnvironment(eval_data_with_chart_patterns)
+    eval_env = TradingEnvironment()
 
     # Evaluate the agent's performance
     evaluate_agent(agent, eval_env, trading_data=trading_data)
-    print(f"Cumulative profit: {cumulative_profit}")
+  #  print(f"Cumulative profit: {cumulative_profit}")
 
     # Live trading (once you're satisfied with the agent's performance)
     live_data = ...  # Fetch live data for trading
 
     # Create a new trading environment using the live data
-    live_env = TradingEnvironment(live_data)
+    #live_env = TradingEnvironment(live_data)
 
     # Use the trained agent to make trading decisions
-    action = agent.select_action(live_env.current_state())
+    #action = agent.select_action(live_env.current_state())
 
     # Execute the trading decision using the CCXT library
     dashboard_thread.join()

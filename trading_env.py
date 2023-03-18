@@ -1,8 +1,8 @@
 import gym
 import numpy as np
 from gym import spaces
-
-class TradingEnvironment(gym.Env):
+#class TradingEnvironment(gym.Env):
+class TradingEnvironment():
     def __init__(self, data, initial_balance, window_size):
         self.data = data
         self.initial_balance = initial_balance

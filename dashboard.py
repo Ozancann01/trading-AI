@@ -5,8 +5,8 @@ from dash import html
 from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
-
-
+import requests
+import json
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 
@@ -56,12 +56,13 @@ app.layout = dbc.Container(
     fluid=True,
 )
 
-def get_trading_data(trading_data):
-    data = []
-    if trading_data:
-        for key in trading_data.keys():
-            data.append(trading_data[key])
-    return pd.DataFrame(data)
+def get_trading_data():
+    try:
+        with open('trading_data.json', 'r') as f:
+            data = json.load(f)
+            return pd.DataFrame(data)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return pd.DataFrame()
 
 
 
