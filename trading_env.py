@@ -1,7 +1,3 @@
-import gym
-import numpy as np
-from gym import spaces
-
 class TradingEnvironment(gym.Env):
     def __init__(self, data, initial_balance, window_size):
         self.data = data
@@ -42,7 +38,9 @@ class TradingEnvironment(gym.Env):
         return obs, reward, done, info
 
     def _get_observation(self):
-        return self.data.iloc[self.current_step - self.window_size:self.current_step].values
+        obs = self.data.iloc[self.current_step - self.window_size:self.current_step].copy()
+        obs.reset_index(drop=True, inplace=True)
+        return obs.values
 
     def render(self, mode='human'):
-        pass  # Rendering is not implemented for this environment
+        pass
